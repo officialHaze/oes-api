@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+    command: >
+      sh -c "until nc -z db 5432; do
+                echo 'waiting for db'
+                sleep 1s & wait
+             done &&
+             python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:5000"
+    ports:
+      - 5000:5000
+    volumes:
+      - ./app:/app
+    environment:
+      - DEBUG=1
+      - DB_HOST=db
+      - DB_NAME=adminDB
+      - DB_USER=moinak
+      - DB_PASS=changeme
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=adminDB
+      - POSTGRES_USER=moinak
+      - POSTGRES_PASSWORD=changeme
